@@ -1,0 +1,240 @@
+{
+  "info": {
+    "name": "SCHOOL SYSTEM - FULL AUTO TEST + COMPUTER OPERATOR (PORT 3000)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Register Admin (First Time)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Admin Created', function () {",
+              "    pm.response.to.have.status(201);",
+              "    console.log('Admin ban gaya!');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"admin\",\"fullName\":\"Super Admin\",\"password\":\"admin123\"}"
+        },
+        "url": "http://localhost:3000/api/v1/auth/register"
+      }
+    },
+    {
+      "name": "2. Admin Login → Save Token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Admin Login + Token Saved', function () {",
+              "    pm.response.to.have.status(200);",
+              "    const res = pm.response.json();",
+              "    pm.globals.set('ADMIN_TOKEN', res.token);",
+              "    console.log('Admin Token Saved!');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"username\":\"admin\",\"password\":\"admin123\"}" },
+        "url": "http://localhost:3000/api/v1/auth/login"
+      }
+    },
+    {
+      "name": "3. Admin → Create Computer Operator",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Computer Operator Created!', function () {",
+              "    pm.response.to.have.status(201);",
+              "    console.log('Operator ban gaya!');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"operator1\",\"fullName\":\"Ali Operator\",\"password\":\"op123456\"}"
+        },
+        "url": "http://localhost:3000/api/v1/operators"
+      }
+    },
+    {
+      "name": "4. Computer Operator Login → Save Token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Operator Login Success', function () {",
+              "    pm.response.to.have.status(200);",
+              "    const res = pm.response.json();",
+              "    pm.globals.set('OPERATOR_TOKEN', res.token);",
+              "    console.log('Operator Token Saved!');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"username\":\"operator1\",\"password\":\"op123456\"}" },
+        "url": "http://localhost:3000/api/v1/auth/login"
+      }
+    },
+    {
+      "name": "5. FULL FLOW (Admin + Operator + All Features)",
+      "item": [
+        {
+          "name": "Admin: Add Class",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\"name\":\"Class 10\"}" },
+            "url": "http://localhost:3000/api/v1/class-section/class"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Class Added', () => pm.response.to.have.status(201));"] }}]
+        },
+        {
+          "name": "Admin: Add Section",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\"name\":\"A\",\"classId\":1}" },
+            "url": "http://localhost:3000/api/v1/class-section/section"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Section Added', () => pm.response.to.have.status(201));"] }}]
+        },
+        {
+          "name": "Admin: Add Student",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\"rollNo\":\"1001\",\"name\":\"Auto Test Student\",\"fatherName\":\"Father\",\"phone\":\"03001234567\",\"classId\":1,\"sectionId\":1}" },
+            "url": "http://localhost:3000/api/v1/students"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Student Added', () => pm.response.to.have.status(201));"] }}]
+        },
+        {
+          "name": "Operator: Add Marks (Sirf Operator Kar Sakta Hai)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{OPERATOR_TOKEN}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\"studentId\":1,\"subject\":\"Mathematics\",\"marks\":95,\"totalMarks\":100}" },
+            "url": "http://localhost:3000/api/v1/marks"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('MARKS ADDED BY OPERATOR - SUCCESS!', () => pm.response.to.have.status(201)); console.log('COMPUTER OPERATOR KA KAAM HO GAYA!');"] }}]
+        },
+        {
+          "name": "Admin: Generate Fee",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\"studentId\":1,\"amount\":5000,\"month\":\"2025-01\"}" },
+            "url": "http://localhost:3000/api/v1/fee"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Fee Generated', () => pm.response.to.have.status(201));"] }}]
+        },
+        {
+          "name": "Admin: Pay Fee",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\"feeId\":1,\"paidAmount\":5000}" },
+            "url": "http://localhost:3000/api/v1/fee/pay"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Fee Paid', () => pm.response.to.have.status(200));"] }}]
+        },
+        {
+          "name": "Admin: Add Staff",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\"name\":\"Sir Auto\",\"designation\":\"Teacher\",\"salary\":50000}" },
+            "url": "http://localhost:3000/api/v1/staff"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Staff Added', () => pm.response.to.have.status(201));"] }}]
+        },
+        {
+          "name": "Admin: Add Expense",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\"title\":\"Salary Jan\",\"amount\":50000,\"type\":\"Staff_Salary\",\"staffId\":1}" },
+            "url": "http://localhost:3000/api/v1/expenses"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Expense Added', () => pm.response.to.have.status(201));"] }}]
+        },
+        {
+          "name": "Admin: Dashboard Final Check",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" }],
+            "url": "http://localhost:3000/api/v1/dashboard"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('FULL SYSTEM + COMPUTER OPERATOR TEST PASSED!', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    console.log('System Passed');",
+                  "    console.log('Computer Operator Passed');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
