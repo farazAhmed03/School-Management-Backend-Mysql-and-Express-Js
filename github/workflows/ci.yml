@@ -1,0 +1,35 @@
+name: Backend Auto Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Start server in background
+        run: node App.js &
+        
+      - name: Wait for server (10 seconds)
+        run: sleep 10
+
+      - name: Run Postman Tests
+        run: npx newman run https://raw.githubusercontent.com/farazAhmed03/School-Management-Backend-Mysql-and-Express-Js/main/auto-test-collection.json --reporters cli
+
+      - name: Success
+        run: echo "All tests passed successfully!"
