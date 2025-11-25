@@ -1,8 +1,8 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
-
-const JWT_SECRET = "your_strong_secret_key_here_12345";
+require('dotenv').config();
+const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = "7d";
 
 // Login
@@ -10,7 +10,7 @@ const login = async (req, res) => {
   const { username, password } = req.body;
 
   if (!username || !password) {
-    return res.status(400).json({ message: "Username aur password dono do" });
+    return res.status(400).json({ message: "Please Fill Required Fields!" });
   }
 
   try {
@@ -55,7 +55,7 @@ const login = async (req, res) => {
 
 // Logout 
 const logout = (req, res) => {
-  res.json({ message: "Logout successful (token frontend se delete karo)" });
+  res.json({ message: "Logout successful" });
 };
 
 // Get logged in user profile
@@ -78,7 +78,7 @@ const forgotPassword = async (req, res) => {
   try {
     const user = await User.findOne({ where: { username } });
     if (!user) {
-      return res.status(404).json({ message: "User nahi mila" });
+      return res.status(404).json({ message: "User doesnot exists!" });
     }
 
     const resetToken = Math.floor(100000 + Math.random() * 900000).toString();
@@ -87,11 +87,11 @@ const forgotPassword = async (req, res) => {
     user.resetPasswordExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
     await user.save();
 
-    // Print OTP to console (in real app, send via email/SMS)
+    // Print OTP to console 
     console.log(`OTP for ${username}: ${resetToken}`);
 
     res.json({
-      message: "OTP bheja gaya hai (check console)",
+      message: "OTP Sent",
       otp: resetToken
     });
 
@@ -106,7 +106,7 @@ const resetPassword = async (req, res) => {
   const { token, newPassword } = req.body;
 
   if (!token || !newPassword) {
-    return res.status(400).json({ message: "Token aur new password do" });
+    return res.status(400).json({ message: "Require Token and New Password" });
   }
 
   try {
@@ -121,7 +121,7 @@ const resetPassword = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(400).json({ message: "Invalid ya expired OTP" });
+      return res.status(400).json({ message: "Invalid or expired OTP" });
     }
 
     user.password = await bcrypt.hash(newPassword, 10);
@@ -142,7 +142,7 @@ const updateProfile = async (req, res) => {
     const user = await User.findByPk(req.user.id);
 
     if (!user) {
-      return res.status(404).json({ message: "User nahi mila" });
+      return res.status(404).json({ message: "User doesnot exists" });
     }
 
     const { fullName } = req.body;
